@@ -1,3 +1,3 @@
 (function () {
-  alert("Testing works!");
+  console.log("Testing works!");
 })();
