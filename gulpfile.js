@@ -10,7 +10,13 @@ var insert = require('gulp-insert');
 var crlf = require ('gulp-line-ending-corrector');
 //new stuff
 var htmlmin = require('gulp-htmlmin');
-var babel = require('gulp-babel')
+var babel = require('gulp-babel');
+var browserify = require('browserify');
+var source = require('vinyl-source-stream');
+var streamify = require('gulp-streamify');
+var babelify = require('babelify');
+var notify     = require("gulp-notify");
+
 // Basic error logging function to be used below
 function errorLog (error) {
     console.error.bind(error);
@@ -105,8 +111,27 @@ gulp.task('babel', function () {
   gulp.src('src/js/index.js')
     .pipe(babel())
     .pipe(gulp.dest('dist/js'))
-})
+});
+
+// New, haven't figured out how to make this work
+gulp.task('js', function () {
+  browserify({
+    entries: [ './src/js/index.js'],
+    extensions: ['.js', '.jsx'],
+    debug: true //Add sourcemaps
+  })
+  .transform(babelify) // JSX and ES6 => JS
+  .bundle()
+  .on('error', console.error.bind(console))
+  .on("error", notify.onError({
+    message: 'Error: <%= error.message %>',
+    sound: "Sosumi"
+  }))
+  .pipe(source('index.js')) //Desired filename of bundled files
+  .pipe(gulp.dest('./dist/js/'))
+});
 
 // The default Gulp task that happens when you run gulp.
 // It runs all the other gulp tasks above in the correct order.
-gulp.task('default', ['sass', 'lint', 'uglify', 'babel', 'htmlmin', 'watch', 'serve', 'open']);
+//took off: 'babel','lint',
+gulp.task('default', ['sass', 'uglify', 'js', 'htmlmin', 'watch', 'serve', 'open']);

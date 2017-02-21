@@ -1,1 +1,1 @@
-import Testing from 'Components/testing';
+import Testing from './Components/testing';
