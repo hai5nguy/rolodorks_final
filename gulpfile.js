@@ -10,7 +10,7 @@ var insert = require('gulp-insert');
 var crlf = require ('gulp-line-ending-corrector');
 //new stuff
 var htmlmin = require('gulp-htmlmin');
-
+var babel = require('gulp-babel')
 // Basic error logging function to be used below
 function errorLog (error) {
     console.error.bind(error);
@@ -99,8 +99,14 @@ gulp.task('htmlmin', function () {
   gulp.src('src/*.html')
   .pipe(htmlmin({collapseWhitespace: true}))
   .pipe(gulp.dest('dist/'))
+});
+
+gulp.task('babel', function () {
+  gulp.src('src/js/index.js')
+    .pipe(babel())
+    .pipe(gulp.dest('dist/js'))
 })
 
 // The default Gulp task that happens when you run gulp.
 // It runs all the other gulp tasks above in the correct order.
-gulp.task('default', ['sass', 'lint', 'uglify', 'htmlmin', 'watch', 'serve', 'open']);
+gulp.task('default', ['sass', 'lint', 'uglify', 'babel', 'htmlmin', 'watch', 'serve', 'open']);
