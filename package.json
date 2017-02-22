@@ -17,18 +17,27 @@
     "html": "gulp htmlmin"
   },
   "devDependencies": {
+    "babel-core": "^6.23.1",
+    "babel-preset-es2015": "^6.22.0",
+    "babel-preset-react": "^6.23.0",
+    "babelify": "^7.3.0",
+    "browserify": "^3.46.0",
     "express": "^4.13.4",
     "gulp": "^3.9.1",
+    "gulp-babel": "^6.1.2",
     "gulp-htmlmin": "^3.0.0",
     "gulp-insert": "^0.5.0",
     "gulp-jshint": "^2.0.1",
     "gulp-line-ending-corrector": "^1.0.1",
     "gulp-livereload": "^3.8.1",
+    "gulp-notify": "^3.0.0",
     "gulp-rename": "^1.2.2",
     "gulp-sass": "^2.3.1",
+    "gulp-streamify": "^1.0.2",
     "gulp-uglify": "^1.5.3",
     "jshint": "^2.9.2",
-    "sass": "^0.5.0"
+    "sass": "^0.5.0",
+    "vinyl-source-stream": "^0.1.1"
   },
   "dependencies": {
     "lodash": "^3.10.1",

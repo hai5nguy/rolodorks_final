@@ -2,14 +2,23 @@
 // These are pulled in from the node_modules folder.
 var gulp = require('gulp');
 var jshint = require('gulp-jshint');
-var livereload = require('gulp-livereload');
+
 var rename = require('gulp-rename');
 var sass = require('gulp-sass');
 var uglify = require('gulp-uglify');
 var insert = require('gulp-insert');
 var crlf = require ('gulp-line-ending-corrector');
-//new stuff
 var htmlmin = require('gulp-htmlmin');
+var browserify = require('browserify');
+var source = require('vinyl-source-stream');
+var streamify = require('gulp-streamify');
+var babelify = require('babelify');
+var notify     = require("gulp-notify");
+//new stuff for the gulp file goes below
+
+//Not currently being used
+var babel = require('gulp-babel');
+var livereload = require('gulp-livereload');
 
 // Basic error logging function to be used below
 function errorLog (error) {
@@ -65,15 +74,18 @@ gulp.task('serve', function (done) {
 // if you have the LiveReload browser extension installed.
 gulp.task('html', function () {
     gulp.src('src/*.html')
-        .pipe(livereload());
+      .pipe(gulp.dest('dist/'))
+      .pipe(livereload())
+      .pipe(notify({message: 'HTML task complete'}));
 });
 
 // Watch for changes in JS, Sass, and HTML files, then Lint,
 // Uglify, Process the Sass, and reload the browser automatically
 gulp.task('watch', function () {
   var server = livereload();
-    gulp.watch('src/js/*.js', ['lint']);
-    gulp.watch('src/js/*.js', ['uglify']);
+    gulp.watch('src/js/**/*.{js,jsx}', ['lint']);
+    gulp.watch('src/js/**/*.{js,jsx}', ['uglify']);
+    gulp.watch('src/js/**/*.{js,jsx}', ['js']);
     gulp.watch('src/sass/*.sass', ['sass']);
     gulp.watch('src/*.html', ['html']);
 
@@ -99,8 +111,36 @@ gulp.task('htmlmin', function () {
   gulp.src('src/*.html')
   .pipe(htmlmin({collapseWhitespace: true}))
   .pipe(gulp.dest('dist/'))
-})
+});
+
+{/*   ======Not being used======     */}
+// gulp.task('babel', function () {
+//   gulp.src('src/js/index.js')
+//     .pipe(babel())
+//     .pipe(gulp.dest('dist/js'))
+// });
+{/*   ======Not being used======     */}
+
+
+// New, haven't figured out how to make this work
+gulp.task('js', function () {
+  browserify({
+    entries: [ './src/js/index.js'],
+    extensions: ['.js', '.jsx'],
+    debug: true //Add sourcemaps
+  })
+  .transform(babelify) // JSX and ES6 => JS
+  .bundle()
+  .on('error', console.error.bind(console))
+  .on("error", notify.onError({
+    message: 'Error: <%= error.message %>',
+    sound: "Sosumi"
+  }))
+  .pipe(source('index.js')) //Desired filename of bundled files
+  .pipe(gulp.dest('./dist/js/'))
+});
 
 // The default Gulp task that happens when you run gulp.
 // It runs all the other gulp tasks above in the correct order.
-gulp.task('default', ['sass', 'lint', 'uglify', 'htmlmin', 'watch', 'serve', 'open']);
+//took off: 'babel',
+gulp.task('default', ['sass', 'uglify', 'lint', 'js', 'html', 'watch', 'serve', 'open']);
