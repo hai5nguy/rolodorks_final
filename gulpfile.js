@@ -2,7 +2,7 @@
 // These are pulled in from the node_modules folder.
 var gulp = require('gulp');
 var jshint = require('gulp-jshint');
-var livereload = require('gulp-livereload');
+
 var rename = require('gulp-rename');
 var sass = require('gulp-sass');
 var uglify = require('gulp-uglify');
@@ -18,7 +18,7 @@ var notify     = require("gulp-notify");
 
 //Not currently being used
 var babel = require('gulp-babel');
-
+var livereload = require('gulp-livereload');
 
 // Basic error logging function to be used below
 function errorLog (error) {
@@ -83,9 +83,9 @@ gulp.task('html', function () {
 // Uglify, Process the Sass, and reload the browser automatically
 gulp.task('watch', function () {
   var server = livereload();
-    gulp.watch('src/js/**/*.js', ['lint']);
-    gulp.watch('src/js/**/*.js', ['uglify']);
-    gulp.watch('src/js/**/*.js', ['js']);
+    gulp.watch('src/js/**/*.{js,jsx}', ['lint']);
+    gulp.watch('src/js/**/*.{js,jsx}', ['uglify']);
+    gulp.watch('src/js/**/*.{js,jsx}', ['js']);
     gulp.watch('src/sass/*.sass', ['sass']);
     gulp.watch('src/*.html', ['html']);
 
@@ -136,7 +136,7 @@ gulp.task('js', function () {
     message: 'Error: <%= error.message %>',
     sound: "Sosumi"
   }))
-  .pipe(notify({message: 'JS task complete'}))
+  // .pipe(notify({message: 'JS task complete'}))
   .pipe(source('index.js')) //Desired filename of bundled files
   .pipe(gulp.dest('./dist/js/'))
 });
