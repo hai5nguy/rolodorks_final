@@ -136,7 +136,6 @@ gulp.task('js', function () {
     message: 'Error: <%= error.message %>',
     sound: "Sosumi"
   }))
-  // .pipe(notify({message: 'JS task complete'}))
   .pipe(source('index.js')) //Desired filename of bundled files
   .pipe(gulp.dest('./dist/js/'))
 });
