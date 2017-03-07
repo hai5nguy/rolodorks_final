@@ -45,17 +45,19 @@ gulp.task('uglify', function () {
 // Create expanded and .min versions of Sass styles in the _styles folder as CSS
 gulp.task('sass', function () {
     gulp.src('src/sass/style.sass')
-        .pipe(sass({ outputStyle: 'expanded' })
-        .on('error', sass.logError))
-        .pipe(crlf({eolc:'CRLF', encoding:'utf8'}))
+		.pipe(sourcemaps.init())
+				.on('error', sass.logError)
+					.pipe(sass({ outputStyle: 'expanded' }))
+				.pipe(crlf({eolc:'CRLF', encoding:'utf8'}))
         .pipe(gulp.dest('dist/css/'))
         .pipe(rename('style.min.css'))
         .pipe(sass({ outputStyle: 'compressed' }))
         .pipe(crlf({eolc:'CRLF', encoding:'utf8'}))
+				.pipe(sourcemaps.write('.'))
         .pipe(gulp.dest('dist/css/'))
-        .pipe(livereload());
-});
+        .pipe(livereload())
 
+});
 // Lint the main.js file to ensure code consistency and catch any errors
 gulp.task('lint', function() {
     return gulp.src('src/js/app.js')
