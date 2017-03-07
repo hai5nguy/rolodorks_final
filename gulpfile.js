@@ -15,6 +15,10 @@ var streamify = require('gulp-streamify');
 var babelify = require('babelify');
 var notify     = require("gulp-notify");
 //new stuff for the gulp file goes below
+var eslint = require('gulp-eslint');
+var open = require('gulp-open');
+var os = require('os');
+var sourcemaps = require('gulp-sourcemaps');
 
 //Not currently being used
 var babel = require('gulp-babel');
@@ -30,13 +34,14 @@ function errorLog (error) {
 // them to functionally identical code that uses less bytes in the _scripts folder
 gulp.task('uglify', function () {
     gulp.src('src/js/*.js')
+				.pipe(sourcemaps.init({loadMaps: true}))
         .pipe(uglify())
         .on('error', errorLog)
         .pipe(insert.append('\n'))
         .pipe(crlf({eolc:'CRLF', encoding:'utf8'}))
+				.pipe(sourcemaps.write('.'))
         .pipe(gulp.dest('dist/js/'));
 });
-
 // Create expanded and .min versions of Sass styles in the _styles folder as CSS
 gulp.task('sass', function () {
     gulp.src('src/sass/style.sass')
@@ -85,7 +90,7 @@ gulp.task('watch', function () {
   var server = livereload();
     gulp.watch('src/js/**/*.{js,jsx}', ['lint']);
     gulp.watch('src/js/**/*.{js,jsx}', ['uglify']);
-    gulp.watch('src/js/**/*.{js,jsx}', ['js']);
+    gulp.watch('src/js/**/*.{js,jsx}', ['js', 'lint']);
     gulp.watch('src/sass/*.sass', ['sass']);
     gulp.watch('src/*.html', ['html']);
 
@@ -94,17 +99,16 @@ gulp.task('watch', function () {
 
 // Automatically opens the local server in your default browser
 gulp.task('open', function () {
-    var url = 'http://localhost:8000';
-    var OS = process.platform;
-    var exectuable = '';
-
-    //OS Specific values for opening files.
-    if (OS == 'darwin') { executable = 'open ';     }
-    if (OS == 'linux')  { executable = 'xdg-open '; }
-    if (OS == 'win32')  { exectuable = 'explorer '; }
-
-    //Run the OS specific command to open the url in the default browser
-    require("child_process").exec( exectuable + url );
+	//OS Specific values for opening files.
+	console.log(os.platform())
+	var browser = os.platform() === 'linux' ? 'google-chrome' : (
+		os.platform() === 'darwin' ? '/Applications/Google\ Chrome.app' : (
+		os.platform() === 'win32' ? 'chrome' : 'firefox'));
+    var options = {
+			uri: 'http://localhost:8000',
+			app: browser};
+		gulp.src(__filename)
+			.pipe(open(options));
 });
 
 gulp.task('htmlmin', function () {
@@ -113,14 +117,16 @@ gulp.task('htmlmin', function () {
   .pipe(gulp.dest('dist/'))
 });
 
-{/*   ======Not being used======     */}
-// gulp.task('babel', function () {
-//   gulp.src('src/js/index.js')
-//     .pipe(babel())
-//     .pipe(gulp.dest('dist/js'))
-// });
-{/*   ======Not being used======     */}
-
+gulp.task('lint', () => {
+    // ESLint ignores files with "node_modules" paths.
+    // Otherwise, the task may end before the stream has finished.
+    return gulp.src(['.src/js/**.*','!node_modules/**'])
+        .pipe(eslint())
+        // eslint.format() outputs the lint results to the console.
+        .pipe(eslint.format())
+        // To have the process exit with an error code (1) on
+        .pipe(eslint.failAfterError());
+});
 
 // New, haven't figured out how to make this work
 gulp.task('js', function () {
