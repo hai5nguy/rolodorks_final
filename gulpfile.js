@@ -1,8 +1,6 @@
 // Includes - Defining what will be used below.
 // These are pulled in from the node_modules folder.
 var gulp = require('gulp');
-var jshint = require('gulp-jshint');
-
 var rename = require('gulp-rename');
 var sass = require('gulp-sass');
 var uglify = require('gulp-uglify');
@@ -15,54 +13,78 @@ var streamify = require('gulp-streamify');
 var babelify = require('babelify');
 var notify     = require("gulp-notify");
 //new stuff for the gulp file goes below
+var imagemin = require('gulp-imagemin');
+var babel = require('gulp-babel');
+var livereload = require('gulp-livereload');
+var util = require('gulp-util');
 var eslint = require('gulp-eslint');
 var open = require('gulp-open');
 var os = require('os');
 var sourcemaps = require('gulp-sourcemaps');
-
+var concat = require('gulp-concat');
+var reactTools = require('react-tools');
 //Not currently being used
-var babel = require('gulp-babel');
-var livereload = require('gulp-livereload');
 
+
+var dependencies = [
+	'react',
+  	'react/addons'
+  ]
 // Basic error logging function to be used below
 function errorLog (error) {
     console.error.bind(error);
     this.emit('end');
 }
 
+
 // Uglify JS - Targets all .js files in the _js folder and converts
 // them to functionally identical code that uses less bytes in the _scripts folder
 gulp.task('uglify', function () {
-    gulp.src('src/js/*.js')
+ //     gulp.src('src/js/*.js')
+ // 	 .pipe(sourcemaps.init({loadMaps: true}))
+ // 	 .pipe(uglify())
+ // 	 .on('error', errorLog)
+ // 	 .pipe(insert.append('\n'))
+ // 	 .pipe(crlf({eolc:'CRLF', encoding:'utf8'}))
+ // 	 .pipe(sourcemaps.write('.'))
+ // 	 .pipe(gulp.dest('dist/js/'));
+ // });
+	//index.jsx is the entry point for the src file
+		gulp.src('src/js/**/*.js').pipe(require('gulp-reactify')({
+			reactTools: require('reactTools')
+		}))
+				//create a sourcemap for the folders
 				.pipe(sourcemaps.init({loadMaps: true}))
+				.pipe(concat('index.js'))
         .pipe(uglify())
-        .on('error', errorLog)
-        .pipe(insert.append('\n'))
-        .pipe(crlf({eolc:'CRLF', encoding:'utf8'}))
-				.pipe(sourcemaps.write('.'))
-        .pipe(gulp.dest('dist/js/'));
+        // .on('error', errorLog)
+        // .pipe(insert.append('\n'))
+        // .pipe(crlf({eolc:'CRLF', encoding:'utf8'}))
+				.pipe(sourcemaps.write('../dist/js/'))
+				.pipe(gulp.dest('../dist/js/'))
+})
+// Create a task that optimizes images and the folder structure
+gulp.task('img', function (source) {
+  return gulp.src('src/images/**/*')
+    .pipe(imagemin({
+      progressive: true}))
+    .pipe(gulp.dest('dist/images/'))
 });
+
 // Create expanded and .min versions of Sass styles in the _styles folder as CSS
 gulp.task('sass', function () {
-    gulp.src('src/sass/style.sass')
-		.pipe(sourcemaps.init())
+    gulp.src('src/scss/rook.scss')
+				.pipe(sourcemaps.init())
 				.on('error', sass.logError)
-					.pipe(sass({ outputStyle: 'expanded' }))
+				.pipe(sass({ outputStyle: 'expanded' }))
 				.pipe(crlf({eolc:'CRLF', encoding:'utf8'}))
         .pipe(gulp.dest('dist/css/'))
-        .pipe(rename('style.min.css'))
+        .pipe(rename('index.css'))
         .pipe(sass({ outputStyle: 'compressed' }))
         .pipe(crlf({eolc:'CRLF', encoding:'utf8'}))
 				.pipe(sourcemaps.write('.'))
         .pipe(gulp.dest('dist/css/'))
         .pipe(livereload())
-
-});
-// Lint the main.js file to ensure code consistency and catch any errors
-gulp.task('lint', function() {
-    return gulp.src('src/js/app.js')
-        .pipe(jshint())
-        .pipe(jshint.reporter('default'));
 });
 
 // Run a local server on port 8000
@@ -90,12 +112,11 @@ gulp.task('html', function () {
 // Uglify, Process the Sass, and reload the browser automatically
 gulp.task('watch', function () {
   var server = livereload();
-    gulp.watch('src/js/**/*.{js,jsx}', ['lint']);
-    gulp.watch('src/js/**/*.{js,jsx}', ['uglify']);
+    // gulp.watch('src/js/**/*.{js,jsx}', ['lint']);
+    // gulp.watch('src/js/**/*.{js,jsx}', ['uglify']);
     gulp.watch('src/js/**/*.{js,jsx}', ['js', 'lint']);
-    gulp.watch('src/sass/*.sass', ['sass']);
+    gulp.watch('src/scss/**/*.scss', ['sass']);
     gulp.watch('src/*.html', ['html']);
-
     livereload.listen();
 });
 
@@ -119,10 +140,29 @@ gulp.task('htmlmin', function () {
   .pipe(gulp.dest('dist/'))
 });
 
+// New, still working this out
+gulp.task('js', function () {
+  browserify({
+    entries: [ './src/js/index.js'],
+    extensions: ['.js', '.jsx'],
+    require: dependencies,
+    debug: true //Add sourcemaps
+  })
+  .transform(babelify) // JSX and ES6 => JS
+  .bundle()
+	.pipe(source('index.js')) //Desired filename of bundled files
+	.on('error', console.error.bind(console))
+  .on("error", notify.onError({
+    message: 'Error: <%= error.message %>',
+    sound: "Sosumi"}))
+  .pipe(gulp.dest('./dist/js/'))
+	.pipe(livereload())
+});
+
 gulp.task('lint', () => {
     // ESLint ignores files with "node_modules" paths.
     // Otherwise, the task may end before the stream has finished.
-    return gulp.src(['.src/js/**.*','!node_modules/**'])
+    return gulp.src(['src/js/**/*.{js,jsx}','!node_modules/**'])
         .pipe(eslint())
         // eslint.format() outputs the lint results to the console.
         .pipe(eslint.format())
@@ -130,25 +170,7 @@ gulp.task('lint', () => {
         .pipe(eslint.failAfterError());
 });
 
-// New, haven't figured out how to make this work
-gulp.task('js', function () {
-  browserify({
-    entries: [ './src/js/index.js'],
-    extensions: ['.js', '.jsx'],
-    debug: true //Add sourcemaps
-  })
-  .transform(babelify) // JSX and ES6 => JS
-  .bundle()
-  .on('error', console.error.bind(console))
-  .on("error", notify.onError({
-    message: 'Error: <%= error.message %>',
-    sound: "Sosumi"
-  }))
-  .pipe(source('index.js')) //Desired filename of bundled files
-  .pipe(gulp.dest('./dist/js/'))
-});
-
 // The default Gulp task that happens when you run gulp.
 // It runs all the other gulp tasks above in the correct order.
-//took off: 'babel',
-gulp.task('default', ['sass', 'uglify', 'lint', 'js', 'html', 'watch', 'serve', 'open']);
+//took off: 'babel','uglify',
+gulp.task('default', [ 'html', 'img', 'sass', 'js', 'watch', 'serve', 'open']);
