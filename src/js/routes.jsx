@@ -1,15 +1,15 @@
 import React from 'react';
-import { Route, Router } from 'react-router';
+import { IndexRoute, Route } from 'react-router';
 //component
-import { Card } from './component/render/Card';
+import Card from './component/Card';
 import { Deck } from './component/render/Deck';
-import { App } from './component/App';
+import Home from './component/Home';
+import Root from './component/Root';
 
-export default function route() {
-  return (
-    <Router path={'/'} component={ App } >
-      <Route path={'card'} component={ Card } />
-      <Route path={'deck'} component={ Deck } />
-    </Router>
-    );
-  }
+export default (
+  <Route path="/" component={Root}>
+    <IndexRoute component={Home} />
+    <Route path="/card" component={Card} />
+    <Route path="/deck" component={Deck} />
+  </Route>
+);

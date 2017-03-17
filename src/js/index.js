@@ -7,9 +7,7 @@ import routes from './routes';
 class App extends React.Component {
   render() {
     return (
-      <Router history={ browserHistory }>
-        { routes() }
-      </Router>
+      <Router history={ browserHistory } children={routes} />
     );
   }
 }

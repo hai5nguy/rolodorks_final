@@ -94,6 +94,7 @@ gulp.task('serve', function (done) {
     //path to the folder that will be served. __dirname is project root
     var path = 'dist/';
     app.use(express.static(path));
+    app.use('*', express.static(__dirname + '/dist/index.html'))
     app.listen(8000, function () {
          done();
     });
