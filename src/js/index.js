@@ -1,10 +1,17 @@
-import React from 'React';
-import ReactDOM from 'react-dom';
+import React from 'react';
+import {render} from 'react-dom';
+import { Router, browserHistory } from 'react-router';
 // Component
-import { NavBar } from './component/NavBar.jsx';
+import routes from './routes';
 
+class App extends React.Component {
+  render() {
+    return (
+      <Router history={ browserHistory }>
+        { routes() }
+      </Router>
+    );
+  }
+}
 
-ReactDOM.render(
-  <NavBar />,
-  document.getElementById('App')
-);
+render(<App />, window.document.getElementById('app'));
